@@ -55,7 +55,7 @@ plt.close()
 
 plot_decision_regions(X, y, classifier=ppn)
 plt.xlabel('sepal length [cm]')
-plt.xlabel('petal length [cm]')
+plt.ylabel('petal length [cm]')
 plt.legend(loc='upper left')
 plt.savefig('perceptron/decision_regions.png')
 plt.close()
