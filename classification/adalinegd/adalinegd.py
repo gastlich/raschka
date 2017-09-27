@@ -1,20 +1,20 @@
 from typing import TypeVar, Generic
 import numpy as np
 
-T = TypeVar('Perceptron')
+T = TypeVar('AdalineGD')
 
 
-class Perceptron(Generic[T]):
-    """Percepton classifier
-    
+class AdalineGD(Generic[T]):
+    """ADAptive LInear NEuron classifier.
+
     Attributes:
         w_: 1d-array
             Weights after fitting.
-        errors_: list
-            Number of misclassifications in every epoch.
+        cost_: list
+            Value of cost function
     """
     w_ = None
-    errors_ = None
+    cost_ = None
 
     def __init__(self, eta: float = 0.01, n_iter: int = 10):
         """
@@ -22,48 +22,41 @@ class Perceptron(Generic[T]):
         :param n_iter: int Passes over the training dataset (epochs)
         """
         self.eta = eta
-        self.n__iter = n_iter
+        self.n_iter = n_iter
 
     def fit(self, X: np.ndarray, y: np.ndarray) -> T:
         """Fit training data.
-        
+
         :param X:  np.ndarray shape = [n_samples, n_features] Training vectors, where n_samples is
             the number of samples and n_features is the number of features.
         :param y:  np.ndarray shape = [n_samples] Target values.
-        
-        :return: Perceptron self object
+
+        :return: AdalineGD self object
         """
 
         # create n (features) + 1 long zeros array of initial weights
         # self.w_[0] is going to be our bias
         self.w_ = np.zeros(1 + X.shape[1])
-        self.errors_ = []
+        self.cost_ = []
 
-        # for number of iteration to teach Perceptron
-        for _ in range(self.n__iter):
-            errors = 0
+        for i in range(self.n_iter):
+            output = self.net_input(X)
+            errors = (y - output)
+            self.w_[1:] += self.eta * X.T.dot(errors)
+            self.w_[0] += self.eta * errors.sum()
 
-            # for each sample data take data and its desired output value
-            for xi, target in zip(X, y):
-                # scalar update weight value
-                update = self.eta * (target - self.predict(xi))
-
-                # update all of the weight
-                self.w_[1:] += update * xi
-
-                # update bias
-                self.w_[0] += update
-
-                errors += int(update != 0.0)
-
-            self.errors_.append(errors)
+            cost = (errors ** 2).sum() / 2.0
+            self.cost_.append(cost)
 
         return self
 
-    def net_input(self, X: np.ndarray) -> float:
+    def net_input(self, X: np.ndarray) -> np.ndarray:
         """Calculate net input"""
         return np.dot(X, self.w_[1:]) + self.w_[0]
 
+    def activation(self, X) -> np.ndarray:
+        return self.net_input(X)
+
     def predict(self, X: np.ndarray) -> int:
         """Return class label after unit step"""
-        return np.where(self.net_input(X) >= 0.0, 1, -1)
+        return np.where(self.activation(X) >= 0.0, 1, -1)
